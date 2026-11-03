@@ -1,0 +1,132 @@
+--- a/bin/quarto.js
++++ b/bin/quarto.js
+@@ -1,3 +1,14 @@
++function purifierExtensionDirectory(path) {
++  const root = Deno.env.get("QUARTO_PURIFIER_PROJECT");
++  const tree = Deno.env.get("QUARTO_PURIFIER_EXTENSIONS");
++  if (root && tree && (path === root + "/_extensions" || path.startsWith(root + "/_extensions/"))) {
++    return tree + path.slice((root + "/_extensions").length);
++  }
++  if (root && tree && path.startsWith(root + "/") && (path.endsWith("/_extensions") || path.includes("/_extensions/"))) {
++    return tree + "/.nested/" + path.slice(root.length + 1);
++  }
++  return path;
++}
+ var __create = Object.create;
+ var __defProp = Object.defineProperty;
+ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+@@ -78816,6 +78827,7 @@
+   );
+ }
+ async function readExtensions(extensionsDirectory, organization) {
++  extensionsDirectory = purifierExtensionDirectory(extensionsDirectory);
+   const extensions2 = [];
+   const extensionDirs = safeExistsSync(extensionsDirectory) && Deno.statSync(extensionsDirectory).isDirectory ? Deno.readDirSync(extensionsDirectory) : [];
+   for (const extensionDir2 of extensionDirs) {
+@@ -78853,6 +78865,7 @@
+   return extensionDirs;
+ }
+ function extensionFilesFromDirs(dirs) {
++  dirs = dirs.map(purifierExtensionDirectory);
+   const files = [];
+   for (const dir of dirs) {
+     for (const walk5 of walkSync(
+@@ -78870,7 +78883,7 @@
+ }
+ function inputExtensionDirs(input, projectDir) {
+   const extensionsDirPath = (path3) => {
+-    const extPath = join4(path3, kExtensionDir);
++    const extPath = purifierExtensionDirectory(join4(path3, kExtensionDir));
+     try {
+       if (Deno.statSync(extPath).isDirectory) {
+         return extPath;
+@@ -78926,6 +78939,7 @@
+     extensionDirGlobs.push(`*/${extensionId.name}/`);
+   }
+   const findExtensionDir2 = (extDir, globs) => {
++    extDir = purifierExtensionDirectory(extDir);
+     const paths = resolvePathGlobs(extDir, globs, [], { mode: "strict" }).include.filter((path3) => {
+       return extensionFile(path3);
+     });
+@@ -128063,6 +128077,8 @@
+   ensureDirSync(dirname4(targetPath));
+   copyFileIfNewer(file.path, targetPath);
+   if (external && isCssFile(file.path)) {
++    const tree = Deno.env.get("QUARTO_PURIFIER_EXTENSIONS");
++    if (tree && file.path.startsWith(tree + "/")) Deno.chmodSync(targetPath, 0o644);
+     processCssFile(dirname4(file.path), targetPath);
+   }
+ }
+@@ -164754,6 +164770,14 @@
+ init_fs();
+ init_platform();
+ async function extensionSource(target) {
++  const replay = Deno.env.get("QUARTO_PURIFIER_REPLAY");
++  if (replay) {
++    const sources = JSON.parse(Deno.readTextFileSync(replay));
++    const entry = sources[target];
++    if (!entry) throw new Error("Extension is absent from the purifier lock: " + target);
++    return {type:"remote", resolvedTarget:new Response(Deno.readFileSync(entry.archive)),
++      resolvedFile:entry.filename, owner:entry.owner, targetSubdir:entry.targetSubdir};
++  }
+   if (!target.match(/^https?:\/\/.*$/) && existsSync2(target)) {
+     return { type: "local", resolvedTarget: target };
+   }
+@@ -164946,6 +164970,7 @@
+ var kUnversionedFrom = "  (?)";
+ var kUnversionedTo = "(?)  ";
+ async function installExtension(target, temp, allowPrompt, embed) {
++  if (Deno.env.get("QUARTO_PURIFIER_EXTENSIONS")) throw new Error("Extensions are Nix-resolved; update quarto-extensions.json and run quarto-purifier lock --update");
+   const source2 = await extensionSource(target);
+   if (!source2) {
+     info(
+@@ -165069,6 +165094,13 @@
+     const filename = (typeof source2.resolvedTarget === "string" ? source2.resolvedTarget : source2.resolvedFile) || "extension.zip";
+     const toFile = join4(archiveDir, filename);
+     await downloadWithProgress(source2.resolvedTarget, `Downloading`, toFile);
++    const capture = Deno.env.get("QUARTO_PURIFIER_CAPTURE");
++    if (capture) {
++      Deno.copyFileSync(toFile, capture + "/source.archive");
++      Deno.writeTextFileSync(capture + "/source.json", JSON.stringify({
++        url:source2.resolvedTarget.url, filename, owner:source2.owner || null,
++        targetSubdir:source2.targetSubdir || null}));
++    }
+     return unzipAndStage(toFile, source2);
+   } else {
+     if (typeof source2.resolvedTarget !== "string") {
+@@ -165364,6 +165396,7 @@
+ init_path2();
+ init_constants12();
+ async function removeExtension(extension) {
++  if (Deno.env.get("QUARTO_PURIFIER_EXTENSIONS")) throw new Error("Extensions are Nix-resolved; update quarto-extensions.json and run quarto-purifier lock --update");
+   if (extension.id.organization === kBuiltInExtOrg) {
+     throw new Error(
+       `The extension ${extension.title} can't be removed since it is a built in extension.`
+@@ -174683,6 +174716,13 @@
+     const filename = (typeof source2.resolvedTarget === "string" ? source2.resolvedTarget : source2.resolvedFile) || "extension.zip";
+     const toFile = join4(archiveDir, filename);
+     await downloadWithProgress(source2.resolvedTarget, `Downloading`, toFile);
++    const capture = Deno.env.get("QUARTO_PURIFIER_CAPTURE");
++    if (capture) {
++      Deno.copyFileSync(toFile, capture + "/source.archive");
++      Deno.writeTextFileSync(capture + "/source.json", JSON.stringify({
++        url:source2.resolvedTarget.url, filename, owner:source2.owner || null,
++        targetSubdir:source2.targetSubdir || null}));
++    }
+     await unzipInPlace(toFile);
+     if (source2.targetSubdir) {
+       const sourceSubDir = join4(archiveDir, source2.targetSubdir);
+@@ -175634,6 +175674,13 @@
+     const filename = (typeof source2.resolvedTarget === "string" ? source2.resolvedTarget : source2.resolvedFile) || "brand.zip";
+     const toFile = join4(archiveDir, filename);
+     await downloadWithProgress(source2.resolvedTarget, `Downloading`, toFile);
++    const capture = Deno.env.get("QUARTO_PURIFIER_CAPTURE");
++    if (capture) {
++      Deno.copyFileSync(toFile, capture + "/source.archive");
++      Deno.writeTextFileSync(capture + "/source.json", JSON.stringify({
++        url:source2.resolvedTarget.url, filename, owner:source2.owner || null,
++        targetSubdir:source2.targetSubdir || null}));
++    }
+     await unzipInPlace2(toFile);
+     if (source2.targetSubdir) {
+       const sourceSubDir = join4(archiveDir, source2.targetSubdir);

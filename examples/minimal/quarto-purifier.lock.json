@@ -1,0 +1,22 @@
+{
+  "declarations": [
+    "quarto-ext/fontawesome"
+  ],
+  "entries": [
+    {
+      "hash": "sha256-ukoE2VWZo9rFmmgvbKU+fWsChgJ525fOmi1eu/opw0s=",
+      "mirrors": [],
+      "path": "archive-0",
+      "quarto": {
+        "filename": "main.tar.gz",
+        "owner": "quarto-ext",
+        "target": "quarto-ext/fontawesome",
+        "targetSubdir": "fontawesome-main"
+      },
+      "url": "https://codeload.github.com/quarto-ext/fontawesome/tar.gz/refs/heads/main"
+    }
+  ],
+  "purifier": "quarto",
+  "sdk": "5c6ba6436deafc6a6e530ba5eb873c31ed0cd40e9fd8614e21472a30a464483b",
+  "version": 1
+}

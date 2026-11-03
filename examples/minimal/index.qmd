@@ -1,0 +1,5 @@
+---
+title: Locked Quarto extensions
+---
+
+Answer 42. {{< fa check >}}
