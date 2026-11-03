@@ -139,6 +139,10 @@ with tempfile.TemporaryDirectory(prefix="quarto proof with spaces ") as temporar
     consumer.mkdir()
     with tarfile.open(archive) as released:
         released.extractall(consumer, filter="data")
+    shutil.rmtree(consumer / "index_files", ignore_errors=True)
+    assert (
+        consumer / "_extensions/quarto-ext/fontawesome/fontawesome.lua"
+    ).stat().st_mode & 0o200
     assert (
         "unlocked extension"
         not in (

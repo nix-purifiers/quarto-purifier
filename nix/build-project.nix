@@ -68,6 +68,7 @@ let
         rm -rf release-source/.quarto release-source/_site
         mkdir -p release-source/_extensions
         cp -r ${prepared.output}/extensions/. release-source/_extensions/
+      chmod -R u+w release-source
           mkdir -p "$out"
         tar --sort=name --mtime=@1 --owner=0 --group=0 --numeric-owner -czf "$out/quarto-project.tar.gz" -C release-source .
       '';
