@@ -51,6 +51,10 @@
           p = pkgsFor system;
           b = p.quarto-purifier.buildQuartoProject {
             src = ./examples/minimal;
+            resourceRoots = {
+              "index.html" = "index.html";
+              "index_files" = "index_files";
+            };
             doCheck = true;
             checkCommand = "grep -q fa-check index.html";
           };
@@ -58,6 +62,10 @@
         {
           inherit (b.packages) environment project;
           release = b.release;
+          resources = import ./tests/resource-consumer.nix {
+            pkgs = p;
+            projection = b.projections.resources;
+          };
           cli = self.packages.${system}.default;
         }
       );

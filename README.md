@@ -66,6 +66,29 @@ browser downloads, remote document resources, and dependencies fetched by
 extension code need their own integrations. The initial Nix check uses a
 Markdown-to-HTML project without a computation engine.
 
+## Resource projections
+
+Pass `resourceRoots` to select the public rendering and its supporting assets:
+
+```nix
+pkgs.quarto-purifier.buildQuartoProject {
+  src = ./.;
+  resourceRoots = {
+    "index.html" = "index.html";
+    "index_files" = "index_files";
+  };
+}
+```
+
+The build result and `packages.project` expose `projections.resources`, `web`,
+and `java-resources`. Use `.documentRoot` to serve the files and `.classPath`
+for Java resources at the same paths. `resourceDependencies` accepts existing
+resource bundles. Selections are explicit and default to empty: the native
+output also contains source/configuration files. Preserve the rendered asset
+layout and select any additional pages or sidecars. The consumer check reads
+all selected HTML, scripts, styles and fonts through ordinary HTTP and Java;
+it does not execute a browser or validate computational-engine dependencies.
+
 ## Credits
 
 The purifier idea was inspired by nixcloud's
