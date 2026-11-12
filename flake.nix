@@ -44,7 +44,7 @@
           meta.description = "Lock native Quarto extensions";
         };
       });
-      lib.quarto-purifier.readLock = import ./nix/read-lock.nix { lib = nixpkgs.lib; };
+      lib.quarto-purifier = import ./lib-overlays/default { lib = nixpkgs.lib; };
       checks = forAll (
         system:
         let

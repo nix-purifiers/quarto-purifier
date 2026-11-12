@@ -26,7 +26,7 @@
 }:
 let
   lock = purifier.checkLock (
-    import ./read-lock.nix { inherit lib; } { inherit src lockFile declarationsFile; }
+    import ../../lib-overlays/default/read-lock.nix { inherit lib; } { inherit src lockFile declarationsFile; }
   );
   prepared = import ./environment.nix scope { inherit lock fetchers; };
   source = lib.cleanSourceWith {

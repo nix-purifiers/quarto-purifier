@@ -20,6 +20,6 @@ pkgs.lib.makeScope pkgs.newScope (scope: {
       patch = builtins.hashFile "sha256" ../native/extensions.patch;
     }
   );
-  cli = scope.callPackage ./cli.nix { inherit nixpkgsSrc purifierSrc; };
-  buildQuartoProject = scope.callPackage ./build-project.nix { };
+  cli = scope.callPackage ../pkgs/quarto-purifier/default.nix { inherit nixpkgsSrc purifierSrc; };
+  buildQuartoProject = scope.callPackage ../pkgs/build-quarto-project/default.nix { };
 })
