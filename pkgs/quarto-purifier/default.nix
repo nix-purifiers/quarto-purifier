@@ -19,12 +19,12 @@
 stdenvNoCC.mkDerivation {
   pname = "quarto-purifier";
   version = "0.1.0";
-  src = ../.;
+  src = ../..;
   nativeBuildInputs = [ makeWrapper ];
   dontBuild = true;
   installPhase = ''
     mkdir -p "$out/bin" "$out/lib/quarto-purifier"
-    cp -r quarto_purifier nix native "$out/lib/quarto-purifier/"
+    cp -r quarto_purifier nix lib-overlays pkgs native "$out/lib/quarto-purifier/"
     install -m755 bin/quarto-purifier "$out/bin/quarto-purifier"
     for file in realize release; do
       substituteInPlace "$out/lib/quarto-purifier/nix/$file.nix" --replace-fail '@nixpkgs@' '${nixpkgsSrc}' --replace-fail '@purifier@' '${purifierSrc}'
